@@ -8,10 +8,7 @@ async function createBooking(req, res) {
       flightId: req.body.flightId,
       userId: req.body.userId,
       noOfSeats: req.body.noOfSeats,
-      totalCost: req.body.totalCost,
     });
-
-    console.log("inside-controller and response : ", response);
 
     SuccessResponse.data = response;
     SuccessResponse.message = "Successfully completed the booking";

@@ -168,8 +168,19 @@ async function makePayment(data) {
   }
 }
 
+async function cancelOldBooking() {
+  try {
+    const time = new Date(Date.now() - 300000); // time of 5 minutes earlier from current time
+    const response = await bookingRepository.cancelOldBookings(time);
+    return response;
+  } catch (error) {
+    console.log("inside booking-services");
+  }
+}
+
 module.exports = {
   createBooking,
   cancelBooking,
   makePayment,
+  cancelOldBooking,
 };

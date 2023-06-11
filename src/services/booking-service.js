@@ -76,8 +76,6 @@ async function cancelBooking(bookingId) {
       return true;
     }
 
-    console.log("starting to increase the seats");
-
     // Increment the number of seats in the corresponding flight
     await axios.patch(
       `${ServerConfig.FLIGHT_SERVICE}/api/v1/flights/${bookingDetails.flightId}/seats`,
@@ -86,8 +84,6 @@ async function cancelBooking(bookingId) {
         toDecrease: false,
       }
     );
-
-    console.log("after increaseing the seats");
 
     await bookingRepository.update(
       bookingId,
@@ -99,6 +95,16 @@ async function cancelBooking(bookingId) {
   } catch (error) {
     await transaction.rollback();
     throw error;
+  }
+}
+
+async function cancelOldBooking() {
+  try {
+    const time = new Date(Date.now() - 300000); // time of 5 minutes earlier from current time
+    const response = await bookingRepository.cancelOldBookings(time);
+    return response;
+  } catch (error) {
+    console.log("inside booking-services");
   }
 }
 
@@ -125,15 +131,8 @@ async function makePayment(data) {
       );
     }
 
-    if (bookingDetails.status === BOOKED) {
-      throw new AppError(
-        "Payment already done for this booking",
-        StatusCodes.BAD_REQUEST
-      );
-    }
-
     if (bookingDetails.status === CANCELLED) {
-      throw new AppError("The booking has expired", StatusCodes.BAD_REQUEST);
+      throw new AppError(["The booking has expired"], StatusCodes.BAD_REQUEST);
     }
 
     const bookingTime = new Date(bookingDetails.createdAt);
@@ -142,7 +141,7 @@ async function makePayment(data) {
 
     if (currentTime - bookingTime > fiveMinutesInMilliseconds) {
       await cancelBooking(data.bookingId);
-      throw new AppError("The booking has expired", StatusCodes.BAD_REQUEST);
+      throw new AppError(["The booking has expired"], StatusCodes.BAD_REQUEST);
     }
 
     // we assume here that payment is successfull
@@ -162,25 +161,15 @@ async function makePayment(data) {
     }
 
     throw new AppError(
-      "Payment is unsuccessfull ",
+      "Payment is unsuccessfull",
       StatusCodes.INTERNAL_SERVER_ERROR
     );
-  }
-}
-
-async function cancelOldBooking() {
-  try {
-    const time = new Date(Date.now() - 300000); // time of 5 minutes earlier from current time
-    const response = await bookingRepository.cancelOldBookings(time);
-    return response;
-  } catch (error) {
-    console.log("inside booking-services");
   }
 }
 
 module.exports = {
   createBooking,
   cancelBooking,
-  makePayment,
   cancelOldBooking,
+  makePayment,
 };

@@ -14,7 +14,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', apiRoutes);
 
 // If the request come from Reverse-Proxy Server
-app.use('/bookingservice/api', apiRoutes);
+// currenty not needed because we have redirected using pathRewrite inside options
+// app.use('/bookingservice/api', apiRoutes);
 
 
 app.listen(ServerConfig.PORT, async function () {
